@@ -4,7 +4,115 @@ output: html_document
 date: "2024-03-10"
 ---
 
+# Table 1
+
 ```{r}
+library(tidyverse)
+library(dplyr)
+library(caret)
+```
+
+```{r}
+#import data
+df = read_csv(file = "./data/table1.csv")
+
+#tidy 
+
+df_clean = df|>
+  janitor::clean_names()|>
+  dplyr::rename(race = race_recode_w_b_ai_api,
+         age = age_recode_with_1_year_olds,
+         marital_status = marital_status_at_diagnosis,
+         grade = grade_thru_2017,
+         radiation = radiation_recode,
+         t_stage = derived_ajcc_t_7th_ed_2010_2015,
+         n_stage = derived_ajcc_n_7th_ed_2010_2015,
+         m_stage = derived_ajcc_m_7th_ed_2010_2015,
+         chemotherapy = chemotherapy_recode_yes_no_unk,
+         vital_status = vital_status_recode_study_cutoff_used)
+```
+```{r}
+# set seed and select the target columns
+
+set.seed(123)
+target_col = df_clean|>
+  select(race,
+         age,
+         marital_status,
+         grade,
+         radiation,
+         t_stage,
+         n_stage,
+         m_stage,
+         chemotherapy,
+         vital_status)
+# failed using createDataPartition since some levels only have a few data 
+
+data_size <- nrow(target_col)
+
+# Calculate the size of the training set (70% of the data_size)
+training_size <- floor(0.7 * data_size)
+
+# Generate a random sample of row indices for the training set
+training_indices <- sample(seq_len(data_size), size = training_size)
+
+# Create the training and validation sets
+training_set <- target_col[training_indices, ]
+validation_set <- target_col[-training_indices, ]
 
 ```
+
+```{r}
+#define function 
+
+calculate_summary <- function(df, group_var) {
+  df %>%
+    group_by({{ group_var }}) %>%
+    summarise(
+      Count = n(),
+      Percentage = (n() / nrow(df)) * 100
+    )
+}
+
+#race 
+race_summary_train <- calculate_summary(training_set, race)
+race_summary_validation <- calculate_summary(validation_set, race)
+
+#age
+age_summary_train <- calculate_summary(training_set, age)
+age_summary_validation <- calculate_summary(validation_set, age)
+
+#marital_status
+marital_summary_train <- calculate_summary(training_set, marital_status)
+marital_summary_validation <- calculate_summary(validation_set, marital_status)
+
+#grade
+grade_summary_train <- calculate_summary(training_set, grade)
+grade_summary_validation <- calculate_summary(validation_set, grade)
+         
+#radiation
+radiation_summary_train <- calculate_summary(training_set, radiation)
+radiation_summary_validation <- calculate_summary(validation_set, radiation)
+         
+#t_stage
+tstage_summary_train <- calculate_summary(training_set, t_stage)
+tstage_summary_validation <- calculate_summary(validation_set, t_stage)
+         
+#n_stage
+nstage_summary_train <- calculate_summary(training_set, n_stage)
+nstage_summary_validation <- calculate_summary(validation_set, n_stage)
+         
+#m_stage
+mstage_summary_train <- calculate_summary(training_set, m_stage)
+mstage_summary_validation <- calculate_summary(validation_set, m_stage)
+         
+#chemotherapy
+chemo_summary_train <- calculate_summary(training_set, chemotherapy)
+chemo_summary_validation <- calculate_summary(validation_set, chemotherapy)
+         
+#vital_status
+vitalstage_summary_train <- calculate_summary(training_set, vital_status)
+vitalstage_summary_validation <- calculate_summary(validation_set, vital_status)
+```
+
 
